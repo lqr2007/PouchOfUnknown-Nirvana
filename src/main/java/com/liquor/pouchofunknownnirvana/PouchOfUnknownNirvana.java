@@ -1,35 +1,29 @@
 package com.liquor.pouchofunknownnirvana;
 
+import com.alessandro.astages.event.custom.actions.StageAddedPlayerEvent;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.LevelResource;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import java.nio.file.Path;
+import java.util.UUID;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(PouchOfUnknownNirvana.MODID)
@@ -38,80 +32,105 @@ public class PouchOfUnknownNirvana {
     public static final String MODID = "pouchofunknownnirvana";
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
-    // Create a Deferred Register to hold Blocks which will all be registered under the "pouchofunknownnirvana" namespace
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
-    // Create a Deferred Register to hold Items which will all be registered under the "pouchofunknownnirvana" namespace
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "pouchofunknownnirvana" namespace
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    // Creates a new Block with the id "pouchofunknownnirvana:example_block", combining the namespace and path
-    public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    // Creates a new BlockItem with the id "pouchofunknownnirvana:example_block", combining the namespace and path
-    public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
+    public static CompoundTag pouchContents;
+    public static CompoundTag canTakeOutList;
 
-    // Creates a new food item with the id "pouchofunknownnirvana:example_id", nutrition 1 and saturation 2
-    public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
-            .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
-
-    // Creates a creative tab with the id "pouchofunknownnirvana:example_tab" for the example item, that is placed after the combat tab
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.pouchofunknownnirvana")) //The language key for the title of your CreativeModeTab
-            .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
-            .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
-            }).build());
+    ResourceLocation pouchLoacation = ResourceLocation.parse("pouchofunknownnirvana:pouch");
+    Item pouchItem = BuiltInRegistries.ITEM.get(pouchLoacation);
+    ItemStack pouchStack = new ItemStack(pouchItem, 1);
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public PouchOfUnknownNirvana(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
-
-        // Register the Deferred Register to the mod event bus so blocks get registered
-        BLOCKS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so items get registered
-        ITEMS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so tabs get registered
-        CREATIVE_MODE_TABS.register(modEventBus);
-
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (PouchOfUnknownNirvana) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-
-        // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
+        NeoForge.EVENT_BUS.register(StageEventProcess.class);
+        PouchOfUnknownItem.register(modEventBus);
 
         // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        // modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
-    private void commonSetup(FMLCommonSetupEvent event) {
-        // Some common setup code
-        LOGGER.info("HELLO FROM COMMON SETUP");
-
-        if (Config.LOG_DIRT_BLOCK.getAsBoolean()) {
-            LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-        }
-
-        LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
-
-        Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
-    }
-
-    // Add the example block item to the building blocks tab
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(EXAMPLE_BLOCK_ITEM);
-        }
-    }
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
+    public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        Player player = event.getEntity();
+        UUID uuid = player.getUUID();
+        LOGGER.debug(uuid.toString());
+        MinecraftServer server = player.getServer();
+        Path worldSaveRootPath = server.getWorldPath(LevelResource.ROOT);
+        LOGGER.debug(worldSaveRootPath.toString());
+        pouchContents = DataOperater.fileReader(server, player);
+        canTakeOutList = pouchContents.getCompound("canTakeOut");
+        pouchContents.remove("canTakeOut");
+
+        LOGGER.debug(pouchContents.toString());
+        LOGGER.debug(pouchContents.getAllKeys().toString());
+        /*
+        for (String t1 : pouchContents.getAllKeys()) {
+            LOGGER.debug(t1);
+            CompoundTag tagT1 = (CompoundTag) pouchContents.get(t1);
+            for(String t2 : tagT1.getAllKeys()) {
+                LOGGER.debug(t2);
+                CompoundTag tagT2 = (CompoundTag) tagT1.get(t2);
+                LOGGER.debug(String.valueOf(tagT2.getInt("amount")));
+            }
+        }
+
+         */
+    }
+
+    @SubscribeEvent
+    public void onItemRightClick(PlayerInteractEvent.RightClickItem event) {
+        if (event.getSide().isClient()) {
+            return; // 客户端直接退出，只让服务端执行下面的代码
+        }
+
+        Player player = event.getEntity();
+        MinecraftServer server = player.getServer();
+        Inventory inventory = player.getInventory();
+        if (canTakeOutList.isEmpty()) {
+            Component takeOutMessage = Component.literal("没有可以取出的物品！");
+            player.sendSystemMessage(takeOutMessage);
+            return;
+        }
+        int takeOutSum = 0;
+        for(int i = 0; i < 36; i++) {
+            ItemStack slotContent = inventory.getItem(i);
+            if (slotContent.isEmpty()) {
+                for (String itemName : canTakeOutList.getAllKeys()) {
+                    CompoundTag tempTag = canTakeOutList.getCompound(itemName);
+                    ResourceLocation itemLoacation = ResourceLocation.parse(itemName);
+                    Item item = BuiltInRegistries.ITEM.get(itemLoacation);
+                    ItemStack itemStackTemp = new ItemStack(item, 1);
+                    if (tempTag.getInt("amount") <= itemStackTemp.getMaxStackSize()) {
+                        ItemStack itemStack = new ItemStack(item, tempTag.getInt("amount"));
+                        inventory.setItem(i, itemStack);
+                        canTakeOutList.remove(itemName);
+                        LOGGER.debug(itemName + " is empty.");
+                        break;
+                    } else {
+                        ItemStack itemStack = new ItemStack(item, itemStackTemp.getMaxStackSize());
+                        inventory.setItem(i, itemStack);
+                        IntTag tempIntTag = IntTag.valueOf(tempTag.getInt("amount") - itemStackTemp.getMaxStackSize());
+                        CompoundTag tempInTag = new CompoundTag();
+                        tempInTag.put("amount", tempIntTag);
+                        LOGGER.debug(itemName+" still has " + (tempTag.getInt("amount") - itemStackTemp.getMaxStackSize()));
+                        canTakeOutList.remove(itemName);
+                        canTakeOutList.put(itemName, tempInTag);
+                        break;
+                    }
+                }
+                takeOutSum++;
+            }
+        }
+        pouchContents.put("canTakeOut", canTakeOutList);
+        DataOperater.fileWriter(server, player, pouchContents);
+        pouchContents.remove("canTakeOut");
+
+        Component takeOutMessage = Component.literal("已将" + takeOutSum + "组物品取出");
+        player.sendSystemMessage(takeOutMessage);
     }
 }

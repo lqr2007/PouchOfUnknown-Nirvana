@@ -1,13 +1,8 @@
 {
-  "itemGroup.pouchofunknownnirvana": "Example Mod Tab",
-  "block.pouchofunknownnirvana.example_block": "Example Block",
-  "item.pouchofunknownnirvana.example_item": "Example Item",
+  "item.pouchofunknownnirvana.pouch": "Pouch of Unknown",
 
   "pouchofunknownnirvana.configuration.title": "PouchOfUnknown:Nirvana Configs",
   "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml": "PouchOfUnknown:Nirvana Configs",
   "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml.title": "PouchOfUnknown:Nirvana Configs",
-  "pouchofunknownnirvana.configuration.items": "Item List",
-  "pouchofunknownnirvana.configuration.logDirtBlock": "Log Dirt Block",
-  "pouchofunknownnirvana.configuration.magicNumberIntroduction": "Magic Number Text",
-  "pouchofunknownnirvana.configuration.magicNumber": "Magic Number"
+  "pouchofunknownnirvana.configuration.magicNumber": "Pouch Capacity"
 }

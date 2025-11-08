@@ -19,6 +19,16 @@ group = mod_group_id
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    exclusiveContent {
+        forRepository {
+            maven {
+                url "https://cursemaven.com"
+            }
+        }
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 base {
@@ -133,6 +143,10 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    implementation "curse.maven:AStages-1120180:6892933"
+    implementation "curse.maven:KubeJS-238086:7143884"
+    implementation "curse.maven:ProbeJS-585406:7105159"
+    implementation "curse.maven:Rhino-416294:7104526"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
