@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "com.liquor.pouchofunknownnirvana.Mixin",
+  "mixins": [
+  ],
+  "client": [
+    "ServerEventHandlerMixin"
+  ],
+  "server": [
+  ],
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

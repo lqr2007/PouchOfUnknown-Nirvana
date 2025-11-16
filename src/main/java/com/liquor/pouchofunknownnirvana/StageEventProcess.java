@@ -8,25 +8,34 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 
+import java.util.UUID;
+
 import static com.liquor.pouchofunknownnirvana.PouchOfUnknownNirvana.*;
 
 public class StageEventProcess {
     @SubscribeEvent
     public static void onStageAdd(StageAddedPlayerEvent event) {
         Player player = event.getEntity();
-        LOGGER.debug("RunRunRunRunRunRun");
+        UUID uuid = player.getUUID();
+        MinecraftServer server = player.getServer();
+        PouchOfUnknownNirvana.LOGGER.debug("RunRunRunRunRunRun");
         String unlockStage = event.stage;
-        CompoundTag tempTag = (CompoundTag) pouchContents.get(unlockStage);
-        canTakeOutList = tempTag;
+
+        CompoundTag pouchContents = pouchContentsAll.get(uuid);
+        CompoundTag canTakeOutList = (CompoundTag) pouchContents.get(unlockStage);
         pouchContents.remove(unlockStage);
         pouchContents.put("canTakeOut", canTakeOutList);
-        DataOperater.fileWriter(player.getServer(), player, pouchContents);
+        canTakeOutListAll.put(uuid, canTakeOutList);
+        DataOperater.fileWriter(server, player, pouchContents);
         pouchContents.remove("canTakeOut");
     }
 
     public static void depositToPouch(Player player, ItemStack itemStack, String stage) {
-        MinecraftServer server = player.getServer();
+        UUID uuid = player.getUUID();
         String itemName = itemStack.getItem().toString();
+
+        CompoundTag pouchContents = pouchContentsAll.get(uuid);
+
         int stackSize = itemStack.getCount();
 
         if (pouchContents.contains(stage)) {
@@ -36,7 +45,6 @@ public class StageEventProcess {
                 stackSize += tagT2.getInt("amount");
                 tagT2.remove("amount");
                 IntTag tempIntTag = IntTag.valueOf(stackSize);
-                CompoundTag tempTag2 = new CompoundTag();
                 tagT2.put("amount", tempIntTag);
                 tagT1.remove(itemName);
                 tagT1.put(itemName, tagT2);
@@ -59,9 +67,7 @@ public class StageEventProcess {
             tempTag1.put(itemName, tempTag2);
             pouchContents.put(stage, tempTag1);
         }
-
-        pouchContents.put("canTakeOut", canTakeOutList);
-
-        DataOperater.fileWriter(server, player, pouchContents);
+        pouchContentsAll.put(uuid, pouchContents);
+        LOGGER.debug(pouchContentsAll.toString());
     }
 }

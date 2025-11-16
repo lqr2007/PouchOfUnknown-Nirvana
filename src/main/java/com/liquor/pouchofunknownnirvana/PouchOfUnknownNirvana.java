@@ -1,6 +1,5 @@
 package com.liquor.pouchofunknownnirvana;
 
-import com.alessandro.astages.event.custom.actions.StageAddedPlayerEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -11,7 +10,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.slf4j.Logger;
@@ -22,7 +20,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.common.NeoForge;
-import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -33,12 +32,8 @@ public class PouchOfUnknownNirvana {
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public static CompoundTag pouchContents;
-    public static CompoundTag canTakeOutList;
-
-    ResourceLocation pouchLoacation = ResourceLocation.parse("pouchofunknownnirvana:pouch");
-    Item pouchItem = BuiltInRegistries.ITEM.get(pouchLoacation);
-    ItemStack pouchStack = new ItemStack(pouchItem, 1);
+    public static Map<UUID, CompoundTag> pouchContentsAll = new HashMap<>();
+    public static Map<UUID, CompoundTag> canTakeOutListAll = new HashMap<>();
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
@@ -58,28 +53,27 @@ public class PouchOfUnknownNirvana {
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         Player player = event.getEntity();
         UUID uuid = player.getUUID();
-        LOGGER.debug(uuid.toString());
         MinecraftServer server = player.getServer();
-        Path worldSaveRootPath = server.getWorldPath(LevelResource.ROOT);
-        LOGGER.debug(worldSaveRootPath.toString());
-        pouchContents = DataOperater.fileReader(server, player);
-        canTakeOutList = pouchContents.getCompound("canTakeOut");
+        CompoundTag pouchContents = DataOperater.fileReader(server, player);
+        CompoundTag canTakeOutList = pouchContents.getCompound("canTakeOut");
         pouchContents.remove("canTakeOut");
+        pouchContentsAll.put(uuid, pouchContents);
+        canTakeOutListAll.put(uuid, canTakeOutList);
+    }
 
-        LOGGER.debug(pouchContents.toString());
-        LOGGER.debug(pouchContents.getAllKeys().toString());
-        /*
-        for (String t1 : pouchContents.getAllKeys()) {
-            LOGGER.debug(t1);
-            CompoundTag tagT1 = (CompoundTag) pouchContents.get(t1);
-            for(String t2 : tagT1.getAllKeys()) {
-                LOGGER.debug(t2);
-                CompoundTag tagT2 = (CompoundTag) tagT1.get(t2);
-                LOGGER.debug(String.valueOf(tagT2.getInt("amount")));
-            }
+    @SubscribeEvent
+    public void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        Player player = event.getEntity();
+        MinecraftServer server = player.getServer();
+        UUID uuid = player.getUUID();
+        CompoundTag pouchContents = pouchContentsAll.get(uuid);
+        CompoundTag canTakeOutList = canTakeOutListAll.get(uuid);
+        if(pouchContents != null) {
+            pouchContents.put("canTakeOut", canTakeOutList);
+            DataOperater.fileWriter(server, player, pouchContents);
+            pouchContentsAll.remove(uuid);
+            canTakeOutListAll.remove(uuid);
         }
-
-         */
     }
 
     @SubscribeEvent
@@ -87,9 +81,16 @@ public class PouchOfUnknownNirvana {
         if (event.getSide().isClient()) {
             return; // 客户端直接退出，只让服务端执行下面的代码
         }
-
         Player player = event.getEntity();
+        if (!event.getItemStack().getItem().toString().equals("pouchofunknownnirvana:pouch")) {
+            return;
+        }
+        UUID uuid = player.getUUID();
         MinecraftServer server = player.getServer();
+
+        CompoundTag pouchContents = pouchContentsAll.get(uuid);
+        CompoundTag canTakeOutList = canTakeOutListAll.get(uuid);
+
         Inventory inventory = player.getInventory();
         if (canTakeOutList.isEmpty()) {
             Component takeOutMessage = Component.literal("没有可以取出的物品！");
@@ -124,6 +125,9 @@ public class PouchOfUnknownNirvana {
                     }
                 }
                 takeOutSum++;
+                if(canTakeOutList.isEmpty()) {
+                    break;
+                }
             }
         }
         pouchContents.put("canTakeOut", canTakeOutList);
