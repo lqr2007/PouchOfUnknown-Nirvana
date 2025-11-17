@@ -3,6 +3,7 @@ package com.liquor.pouchofunknownnirvana;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.TextComponentTagVisitor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -20,9 +21,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.neoforge.common.NeoForge;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+
+import java.util.*;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(PouchOfUnknownNirvana.MODID)
@@ -101,28 +101,42 @@ public class PouchOfUnknownNirvana {
         for(int i = 0; i < 36; i++) {
             ItemStack slotContent = inventory.getItem(i);
             if (slotContent.isEmpty()) {
-                for (String itemName : canTakeOutList.getAllKeys()) {
+                List<String> itemNames = new ArrayList<>(canTakeOutList.getAllKeys());
+                for (String itemName : itemNames) {
                     CompoundTag tempTag = canTakeOutList.getCompound(itemName);
                     ResourceLocation itemLoacation = ResourceLocation.parse(itemName);
                     Item item = BuiltInRegistries.ITEM.get(itemLoacation);
                     ItemStack itemStackTemp = new ItemStack(item, 1);
-                    if (tempTag.getInt("amount") <= itemStackTemp.getMaxStackSize()) {
-                        ItemStack itemStack = new ItemStack(item, tempTag.getInt("amount"));
-                        inventory.setItem(i, itemStack);
-                        canTakeOutList.remove(itemName);
-                        LOGGER.debug(itemName + " is empty.");
-                        break;
-                    } else {
-                        ItemStack itemStack = new ItemStack(item, itemStackTemp.getMaxStackSize());
-                        inventory.setItem(i, itemStack);
-                        IntTag tempIntTag = IntTag.valueOf(tempTag.getInt("amount") - itemStackTemp.getMaxStackSize());
-                        CompoundTag tempInTag = new CompoundTag();
-                        tempInTag.put("amount", tempIntTag);
-                        LOGGER.debug(itemName+" still has " + (tempTag.getInt("amount") - itemStackTemp.getMaxStackSize()));
-                        canTakeOutList.remove(itemName);
-                        canTakeOutList.put(itemName, tempInTag);
-                        break;
+                    boolean itemStillHasAmount = false;
+                    List<String> nbtStrings = new ArrayList<>(tempTag.getAllKeys());
+                    for (String nbtString : nbtStrings) {
+                        itemStillHasAmount = true;
+                        CompoundTag tempTag2 = tempTag.getCompound(nbtString);
+                        if (tempTag2.getInt("amount") <= itemStackTemp.getMaxStackSize()) {
+                            ItemStack itemStack = new ItemStack(item, tempTag2.getInt("amount"));
+                            inventory.setItem(i, itemStack);
+                            // 反编译nbt
+                            tempTag.remove(nbtString);
+                            canTakeOutList.remove(itemName);
+                            break;
+                        } else {
+                            ItemStack itemStack = new ItemStack(item, itemStackTemp.getMaxStackSize());
+                            inventory.setItem(i, itemStack);
+                            // 反编译nbt
+                            IntTag tempIntTag = IntTag.valueOf(tempTag2.getInt("amount") - itemStackTemp.getMaxStackSize());
+                            CompoundTag tempInTag = new CompoundTag();
+                            tempInTag.put("amount", tempIntTag);
+                            CompoundTag tempInTag2 = new CompoundTag();
+                            tempInTag2.put(nbtString, tempInTag);
+                            canTakeOutList.remove(itemName);
+                            canTakeOutList.put(itemName, tempInTag2);
+                            break;
+                        }
                     }
+                    if (!itemStillHasAmount) {
+                        canTakeOutList.remove(itemName);
+                    }
+                    break;
                 }
                 takeOutSum++;
                 if(canTakeOutList.isEmpty()) {
