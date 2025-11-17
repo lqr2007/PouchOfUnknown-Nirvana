@@ -1,21 +1,13 @@
 package com.liquor.pouchofunknownnirvana;
 
 import com.alessandro.astages.event.custom.actions.StageAddedPlayerEvent;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
-
-import javax.swing.text.html.HTML;
 import java.util.UUID;
 
 import static com.liquor.pouchofunknownnirvana.PouchOfUnknownNirvana.*;
