@@ -1,5 +1,6 @@
 package com.liquor.pouchofunknownnirvana;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -68,12 +69,12 @@ public class PouchOfUnknownNirvana {
         UUID uuid = player.getUUID();
         CompoundTag pouchContents = pouchContentsAll.get(uuid);
         CompoundTag canTakeOutList = canTakeOutListAll.get(uuid);
-        if(pouchContents != null) {
+        if(canTakeOutList != null) {
             pouchContents.put("canTakeOut", canTakeOutList);
-            DataOperater.fileWriter(server, player, pouchContents);
-            pouchContentsAll.remove(uuid);
-            canTakeOutListAll.remove(uuid);
         }
+        DataOperater.fileWriter(server, player, pouchContents);
+        pouchContentsAll.remove(uuid);
+        canTakeOutListAll.remove(uuid);
     }
 
     @SubscribeEvent
@@ -87,10 +88,11 @@ public class PouchOfUnknownNirvana {
         }
         UUID uuid = player.getUUID();
         MinecraftServer server = player.getServer();
+        HolderLookup.Provider provider = server.registryAccess();
 
         CompoundTag pouchContents = pouchContentsAll.get(uuid);
         CompoundTag canTakeOutList = canTakeOutListAll.get(uuid);
-
+        LOGGER.debug(canTakeOutList.toString());
         Inventory inventory = player.getInventory();
         if (canTakeOutList.isEmpty()) {
             Component takeOutMessage = Component.literal("没有可以取出的物品！");
@@ -112,24 +114,33 @@ public class PouchOfUnknownNirvana {
                     for (String nbtString : nbtStrings) {
                         itemStillHasAmount = true;
                         CompoundTag tempTag2 = tempTag.getCompound(nbtString);
-                        if (tempTag2.getInt("amount") <= itemStackTemp.getMaxStackSize()) {
-                            ItemStack itemStack = new ItemStack(item, tempTag2.getInt("amount"));
-                            inventory.setItem(i, itemStack);
+                        LOGGER.debug(tempTag2.toString());
+                        if (tempTag2.getInt("count") <= itemStackTemp.getMaxStackSize()) {
                             // 反编译nbt
+                            ItemStack itemStack = ItemStack.parseOptional(provider, tempTag2);
+                            inventory.setItem(i, itemStack);
                             tempTag.remove(nbtString);
                             canTakeOutList.remove(itemName);
+                            if (!tempTag.getAllKeys().isEmpty()) {
+                                canTakeOutList.put(itemName, tempTag);
+                            }
                             break;
                         } else {
-                            ItemStack itemStack = new ItemStack(item, itemStackTemp.getMaxStackSize());
-                            inventory.setItem(i, itemStack);
+                            CompoundTag tempTag2_Copy = tempTag2.copy();
+                            LOGGER.debug(tempTag2_Copy.toString());
+                            tempTag2_Copy.remove("count");
+                            tempTag2_Copy.putInt("count", itemStackTemp.getMaxStackSize());
                             // 反编译nbt
-                            IntTag tempIntTag = IntTag.valueOf(tempTag2.getInt("amount") - itemStackTemp.getMaxStackSize());
-                            CompoundTag tempInTag = new CompoundTag();
-                            tempInTag.put("amount", tempIntTag);
-                            CompoundTag tempInTag2 = new CompoundTag();
-                            tempInTag2.put(nbtString, tempInTag);
+                            ItemStack itemStack = ItemStack.parseOptional(provider, tempTag2_Copy);
+                            inventory.setItem(i, itemStack);
+
+                            IntTag tempIntTag = IntTag.valueOf(tempTag2.getInt("count") - itemStackTemp.getMaxStackSize());
+                            tempTag2.remove("count");
+                            tempTag2.put("count", tempIntTag);
+                            tempTag.remove(nbtString);
+                            tempTag.put(nbtString, tempTag2);
                             canTakeOutList.remove(itemName);
-                            canTakeOutList.put(itemName, tempInTag2);
+                            canTakeOutList.put(itemName, tempTag);
                             break;
                         }
                     }
