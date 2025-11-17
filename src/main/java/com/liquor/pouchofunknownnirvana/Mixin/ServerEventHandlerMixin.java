@@ -4,28 +4,29 @@ import com.alessandro.astages.core.ARestrictionManager;
 import com.alessandro.astages.core.server.restriction.item.ABaseItemRestriction;
 import com.alessandro.astages.event.CommonEventSettings;
 import com.alessandro.astages.event.item.ServerEventHandler;
-import com.liquor.pouchofunknownnirvana.PouchOfUnknownNirvana;
+import com.alessandro.astages.store.Attributes;
+import com.alessandro.astages.store.server.ARestriction;
 import com.liquor.pouchofunknownnirvana.StageEventProcess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
+
+import static com.alessandro.astages.event.item.ServerEventHandler.canBeRunForPlayer;
 
 @Mixin(ServerEventHandler.class)
 public abstract class ServerEventHandlerMixin {
-    @Unique
-    private static boolean astagesFixer_GCTN_1_21_1$itemPickupExecuted = false;
-
     /**
      * @author liquor
      * @reason Don't need the function.
@@ -33,11 +34,17 @@ public abstract class ServerEventHandlerMixin {
     @SubscribeEvent
     @Overwrite
     public static void onItemPickup(ItemEntityPickupEvent.Pre event) {
-        if (!astagesFixer_GCTN_1_21_1$itemPickupExecuted) {
-            PouchOfUnknownNirvana.LOGGER.debug("为什么我能捡东西 :)");
-            astagesFixer_GCTN_1_21_1$itemPickupExecuted = true;
+        Player player = event.getPlayer();
+        if (canBeRunForPlayer(event.getPlayer())) {
+            ABaseItemRestriction<? extends ARestriction<?, ?, ItemStack>, ?> restriction = ARestrictionManager.ITEM_INSTANCE.getRestriction(event.getPlayer(), event.getItemEntity().getItem());
+            if (restriction != null && restriction.isDisabled(Attributes.PICKING_UP)) {
+                event.setCanPickup(TriState.FALSE);
+                event.getItemEntity().remove(Entity.RemovalReason.KILLED);
+                Component getMessage = Component.literal("你将未知物品*" + event.getItemEntity().getItem().getCount() + "放入了未知之袋");
+                player.sendSystemMessage(getMessage);
+                StageEventProcess.depositToPouch(player, event.getItemEntity().getItem(), restriction.getStage());
+            }
         }
-        return;
     }
 
     /**
