@@ -1,11 +1,11 @@
 package com.liquor.pouchofunknownnirvana.Mixin;
 
+import com.alessandro.astages.api.holder.AHolder;
 import com.alessandro.astages.core.ARestrictionManager;
 import com.alessandro.astages.core.server.restriction.item.ABaseItemRestriction;
 import com.alessandro.astages.event.CommonEventSettings;
 import com.alessandro.astages.event.item.ServerEventHandler;
 import com.alessandro.astages.store.Attributes;
-import com.alessandro.astages.store.server.ARestriction;
 import com.liquor.pouchofunknownnirvana.StageEventProcess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -29,14 +29,14 @@ import static com.alessandro.astages.event.item.ServerEventHandler.canBeRunForPl
 public abstract class ServerEventHandlerMixin {
     /**
      * @author liquor
-     * @reason Don't need the function.
+     * @reason Change function: Allowed pick up to pouch.
      */
     @SubscribeEvent
     @Overwrite
     public static void onItemPickup(ItemEntityPickupEvent.Pre event) {
         Player player = event.getPlayer();
         if (canBeRunForPlayer(event.getPlayer())) {
-            ABaseItemRestriction<? extends ARestriction<?, ?, ItemStack>, ?> restriction = ARestrictionManager.ITEM_INSTANCE.getRestriction(event.getPlayer(), event.getItemEntity().getItem());
+            var restriction = ARestrictionManager.ITEM_INSTANCE.getRestriction(AHolder.player(event.getPlayer()), event.getItemEntity().getItem());
             if (restriction != null && restriction.isDisabled(Attributes.PICKING_UP)) {
                 event.setCanPickup(TriState.FALSE);
                 event.getItemEntity().remove(Entity.RemovalReason.KILLED);
@@ -49,7 +49,7 @@ public abstract class ServerEventHandlerMixin {
 
     /**
      * @author liquor
-     * @reason Don't need the function.
+     * @reason Change function: Don't drop items from containers.
      */
     @SubscribeEvent
     @Overwrite
@@ -64,11 +64,13 @@ public abstract class ServerEventHandlerMixin {
 
     /**
      * @author liquor
-     * @reason Send the items to pouch
+     * @reason Change function: Don't drop items, Send the items to pouch
      */
     @SubscribeEvent
     @Overwrite
     public static void onPlayerTick(PlayerTickEvent.Pre event) {
+        if (!CommonEventSettings.requireSlotCheck()) { return; }
+
         ResourceLocation pouchLoacation = ResourceLocation.parse("pouchofunknownnirvana:pouch");
         Item pouchItem = BuiltInRegistries.ITEM.get(pouchLoacation);
         ItemStack pouchStack = new ItemStack(pouchItem, 1);
@@ -90,9 +92,9 @@ public abstract class ServerEventHandlerMixin {
                     if (!slotContent.isEmpty()) {
                         ABaseItemRestriction<?, ?> restriction;
                         if (i >= armorStart && i <= armorEnd) {
-                            restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(event.getEntity(), slotContent);
+                            restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(AHolder.serverAndPlayer(player), slotContent);
                         } else {
-                            restriction = ARestrictionManager.ITEM_INSTANCE.getInventoryRestriction(event.getEntity(), slotContent);
+                            restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(AHolder.serverAndPlayer(player), slotContent);
                         }
 
                         if (restriction != null) {
@@ -112,9 +114,9 @@ public abstract class ServerEventHandlerMixin {
                 if (!slotContent.isEmpty()) {
                     ABaseItemRestriction<?, ?> restriction;
                     if (CommonEventSettings.getSlotChanged() >= armorStart && CommonEventSettings.getSlotChanged() <= armorEnd) {
-                        restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(event.getEntity(), slotContent);
+                        restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(AHolder.serverAndPlayer(player), slotContent);
                     } else {
-                        restriction = ARestrictionManager.ITEM_INSTANCE.getInventoryRestriction(event.getEntity(), slotContent);
+                        restriction = ARestrictionManager.ITEM_INSTANCE.getEquipmentRestriction(AHolder.serverAndPlayer(player), slotContent);
                     }
 
                     if (restriction != null) {
@@ -132,6 +134,5 @@ public abstract class ServerEventHandlerMixin {
             CommonEventSettings.resetSlotChanged();
         }
 
-        // if (CommonEventSettings.requireSlotCheck()) {}
     }
 }

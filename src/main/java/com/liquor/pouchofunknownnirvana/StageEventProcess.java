@@ -1,6 +1,6 @@
 package com.liquor.pouchofunknownnirvana;
 
-import com.alessandro.astages.event.custom.actions.StageAddedPlayerEvent;
+import com.alessandro.astages.api.event.player.StageAddedPlayerEvent;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -15,7 +15,7 @@ import static com.liquor.pouchofunknownnirvana.PouchOfUnknownNirvana.*;
 public class StageEventProcess {
     @SubscribeEvent
     public static void onStageAdd(StageAddedPlayerEvent event) {
-        Player player = event.getEntity();
+        Player player = event.getPlayer();
         UUID uuid = player.getUUID();
         MinecraftServer server = player.getServer();
         PouchOfUnknownNirvana.LOGGER.debug("RunRunRunRunRunRun");

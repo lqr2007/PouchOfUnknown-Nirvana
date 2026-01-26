@@ -105,8 +105,8 @@ public class PouchOfUnknownNirvana {
                 List<String> itemNames = new ArrayList<>(canTakeOutList.getAllKeys());
                 for (String itemName : itemNames) {
                     CompoundTag tempTag = canTakeOutList.getCompound(itemName);
-                    ResourceLocation itemLoacation = ResourceLocation.parse(itemName);
-                    Item item = BuiltInRegistries.ITEM.get(itemLoacation);
+                    ResourceLocation itemLocation = ResourceLocation.parse(itemName);
+                    Item item = BuiltInRegistries.ITEM.get(itemLocation);
                     ItemStack itemStackTemp = new ItemStack(item, 1);
                     boolean itemStillHasAmount = false;
                     List<String> nbtStrings = new ArrayList<>(tempTag.getAllKeys());
