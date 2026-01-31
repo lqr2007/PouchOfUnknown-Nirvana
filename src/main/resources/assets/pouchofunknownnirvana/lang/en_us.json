@@ -9,5 +9,6 @@
   "pouchofunknownnirvana.text.input": "You put %d %s into the Bag of Unknown",
   "pouchofunknownnirvana.text.remove": "You don’t have a Pouch of Unknown. The items have been destroyed!",
   "pouchofunknownnirvana.text.enter": "You put unknown %s *%d into the Pouch of Unknown",
-  "pouchofunknownnirvana.text.output": "Have taken out %d sets of items."
+  "pouchofunknownnirvana.text.output": "Have taken out %d sets of items.",
+  "pouchofunknownnirvana.text.output.not": "Not item"
 }

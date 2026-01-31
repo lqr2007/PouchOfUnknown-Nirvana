@@ -83,7 +83,7 @@ public class PouchOfUnknownNirvana {
         LOGGER.debug(canTakeOutList.toString());
         Inventory inventory = player.getInventory();
         if (canTakeOutList.isEmpty()) {
-            Component takeOutMessage = Component.literal("没有可以取出的物品！");
+            Component takeOutMessage = Component.translatable("pouchofunknownnirvana.text.output.not");
             player.sendSystemMessage(takeOutMessage);
             return;
         }

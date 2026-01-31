@@ -9,5 +9,6 @@
   "pouchofunknownnirvana.text.input": "你将 %d个 %s 存入了未知之袋",
   "pouchofunknownnirvana.text.remove": "由于你没有未知之袋，物品已销毁",
   "pouchofunknownnirvana.text.enter": "你将%s *%d放入了未知之袋",
-  "pouchofunknownnirvana.text.output": "已将 %d 组物品取出"
+  "pouchofunknownnirvana.text.output": "已将 %d 组物品取出",
+  "pouchofunknownnirvana.text.output.not": "没有物品可以取出"
 }
