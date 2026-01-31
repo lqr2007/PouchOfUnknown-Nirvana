@@ -40,7 +40,11 @@ public abstract class ServerEventHandlerMixin {
             if (restriction != null && restriction.isDisabled(Attributes.PICKING_UP)) {
                 event.setCanPickup(TriState.FALSE);
                 event.getItemEntity().remove(Entity.RemovalReason.KILLED);
-                Component getMessage = Component.literal("你将未知物品*" + event.getItemEntity().getItem().getCount() + "放入了未知之袋");
+                Component getMessage = Component.translatable(
+                        "pouchofunknownnirvana.text.input",
+                        event.getItemEntity().getItem().getCount(),
+                        Component.translatable("tooltip.astages.item.hidden_name")
+                );
                 player.sendSystemMessage(getMessage);
                 StageEventProcess.depositToPouch(player, event.getItemEntity().getItem(), restriction.getStage());
             }
@@ -74,7 +78,7 @@ public abstract class ServerEventHandlerMixin {
         ResourceLocation pouchLoacation = ResourceLocation.parse("pouchofunknownnirvana:pouch");
         Item pouchItem = BuiltInRegistries.ITEM.get(pouchLoacation);
         ItemStack pouchStack = new ItemStack(pouchItem, 1);
-        Component destroyMessage = Component.literal("由于你没有未知之袋，未知物品已销毁!");
+        Component destroyMessage = Component.translatable("pouchofunknownnirvana.text.remove");
 
         if (!event.getEntity().level().isClientSide && !(event.getEntity() instanceof FakePlayer)) {
             Player player = event.getEntity();
@@ -99,7 +103,10 @@ public abstract class ServerEventHandlerMixin {
 
                         if (restriction != null) {
                             if (inventory.contains(pouchStack)) {
-                                Component getMessage = Component.literal("你将未知物品*" + slotContent.getCount() + "放入了未知之袋");
+                                Component getMessage = Component.translatable("pouchofunknownnirvana.text.enter",
+                                        Component.translatable("tooltip.astages.item.hidden_name"),
+                                        slotContent.getCount()
+                                );
                                 player.sendSystemMessage(getMessage);
                                 StageEventProcess.depositToPouch(player, slotContent, restriction.getStage());
                             } else {
@@ -121,7 +128,10 @@ public abstract class ServerEventHandlerMixin {
 
                     if (restriction != null) {
                         if (inventory.contains(pouchStack)) {
-                            Component getMessage = Component.literal("你将未知物品*" + slotContent.getCount() + "放入了未知之袋");
+                            Component getMessage = Component.translatable("pouchofunknownnirvana.text.enter",
+                                    Component.translatable("tooltip.astages.item.hidden_name"),
+                                    slotContent.getCount()
+                            );
                             player.sendSystemMessage(getMessage);
                             StageEventProcess.depositToPouch(player, slotContent, restriction.getStage());
                         } else {

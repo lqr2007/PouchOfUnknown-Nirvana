@@ -24,29 +24,18 @@ import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.*;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(PouchOfUnknownNirvana.MODID)
 public class PouchOfUnknownNirvana {
-    // Define mod id in a common place for everything to reference
     public static final String MODID = "pouchofunknownnirvana";
-    // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public static Map<UUID, CompoundTag> pouchContentsAll = new HashMap<>();
     public static Map<UUID, CompoundTag> canTakeOutListAll = new HashMap<>();
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public PouchOfUnknownNirvana(IEventBus modEventBus, ModContainer modContainer) {
-        // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (PouchOfUnknownNirvana) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(StageEventProcess.class);
         PouchOfUnknownItem.register(modEventBus);
-
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        // modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     @SubscribeEvent
@@ -158,7 +147,7 @@ public class PouchOfUnknownNirvana {
         DataOperater.fileWriter(server, player, pouchContents);
         pouchContents.remove("canTakeOut");
 
-        Component takeOutMessage = Component.literal("已将" + takeOutSum + "组物品取出");
+        Component takeOutMessage = Component.translatable("pouchofunknownnirvana.text.output", takeOutSum);
         player.sendSystemMessage(takeOutMessage);
     }
 }

@@ -1,0 +1,13 @@
+{
+  "item.pouchofunknownnirvana.pouch": "未知之袋",
+
+  "pouchofunknownnirvana.configuration.title": "未知之袋·涅槃 配置界面",
+  "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml": "未知之袋·涅槃 配置界面",
+  "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml.title": "未知之袋·涅槃 配置界面",
+  "pouchofunknownnirvana.configuration.magicNumber": "袋子容量",
+
+  "pouchofunknownnirvana.text.input": "你将 %d个 %s 存入了未知之袋",
+  "pouchofunknownnirvana.text.remove": "由于你没有未知之袋，物品已销毁",
+  "pouchofunknownnirvana.text.enter": "你将%s *%d放入了未知之袋",
+  "pouchofunknownnirvana.text.output": "已将 %d 组物品取出"
+}

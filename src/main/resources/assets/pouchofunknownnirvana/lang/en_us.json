@@ -4,5 +4,10 @@
   "pouchofunknownnirvana.configuration.title": "PouchOfUnknown:Nirvana Configs",
   "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml": "PouchOfUnknown:Nirvana Configs",
   "pouchofunknownnirvana.configuration.section.pouchofunknownnirvana.common.toml.title": "PouchOfUnknown:Nirvana Configs",
-  "pouchofunknownnirvana.configuration.magicNumber": "Pouch Capacity"
+  "pouchofunknownnirvana.configuration.magicNumber": "Pouch Capacity",
+
+  "pouchofunknownnirvana.text.input": "You put %d %s into the Bag of Unknown",
+  "pouchofunknownnirvana.text.remove": "You don’t have a Pouch of Unknown. The items have been destroyed!",
+  "pouchofunknownnirvana.text.enter": "You put unknown %s *%d into the Pouch of Unknown",
+  "pouchofunknownnirvana.text.output": "Have taken out %d sets of items."
 }
