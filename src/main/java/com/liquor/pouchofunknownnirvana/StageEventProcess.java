@@ -28,7 +28,9 @@ public class StageEventProcess {
             pouchContents.put("canTakeOut", canTakeOutList);
         }
         canTakeOutListAll.put(uuid, canTakeOutList);
-        DataOperater.fileWriter(server, player, pouchContents);
+        if (server != null) {
+            DataOperater.fileWriter(server, player, pouchContents);
+        }
         pouchContents.remove("canTakeOut");
     }
 

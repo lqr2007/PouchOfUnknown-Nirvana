@@ -43,9 +43,17 @@ public class PouchOfUnknownNirvana {
         Player player = event.getEntity();
         UUID uuid = player.getUUID();
         MinecraftServer server = player.getServer();
-        CompoundTag pouchContents = DataOperater.fileReader(server, player);
-        CompoundTag canTakeOutList = pouchContents.getCompound("canTakeOut");
-        pouchContents.remove("canTakeOut");
+        CompoundTag pouchContents = null;
+        if (server != null) {
+            pouchContents = DataOperater.fileReader(server, player);
+        }
+        CompoundTag canTakeOutList = null;
+        if (pouchContents != null) {
+            canTakeOutList = pouchContents.getCompound("canTakeOut");
+        }
+        if (pouchContents != null) {
+            pouchContents.remove("canTakeOut");
+        }
         pouchContentsAll.put(uuid, pouchContents);
         canTakeOutListAll.put(uuid, canTakeOutList);
     }
@@ -60,7 +68,9 @@ public class PouchOfUnknownNirvana {
         if(canTakeOutList != null) {
             pouchContents.put("canTakeOut", canTakeOutList);
         }
-        DataOperater.fileWriter(server, player, pouchContents);
+        if (server != null) {
+            DataOperater.fileWriter(server, player, pouchContents);
+        }
         pouchContentsAll.remove(uuid);
         canTakeOutListAll.remove(uuid);
     }
@@ -76,7 +86,10 @@ public class PouchOfUnknownNirvana {
         }
         UUID uuid = player.getUUID();
         MinecraftServer server = player.getServer();
-        HolderLookup.Provider provider = server.registryAccess();
+        HolderLookup.Provider provider = null;
+        if (server != null) {
+            provider = server.registryAccess();
+        }
 
         CompoundTag pouchContents = pouchContentsAll.get(uuid);
         CompoundTag canTakeOutList = canTakeOutListAll.get(uuid);
@@ -105,22 +118,31 @@ public class PouchOfUnknownNirvana {
                         LOGGER.debug(tempTag2.toString());
                         if (tempTag2.getInt("count") <= itemStackTemp.getMaxStackSize()) {
                             // 反编译nbt
-                            ItemStack itemStack = ItemStack.parseOptional(provider, tempTag2);
-                            inventory.setItem(i, itemStack);
+                            ItemStack itemStack = null;
+                            if (provider != null) {
+                                itemStack = ItemStack.parseOptional(provider, tempTag2);
+                            }
+                            if (itemStack != null) {
+                                inventory.setItem(i, itemStack);
+                            }
                             tempTag.remove(nbtString);
                             canTakeOutList.remove(itemName);
                             if (!tempTag.getAllKeys().isEmpty()) {
                                 canTakeOutList.put(itemName, tempTag);
                             }
-                            break;
                         } else {
                             CompoundTag tempTag2_Copy = tempTag2.copy();
                             LOGGER.debug(tempTag2_Copy.toString());
                             tempTag2_Copy.remove("count");
                             tempTag2_Copy.putInt("count", itemStackTemp.getMaxStackSize());
                             // 反编译nbt
-                            ItemStack itemStack = ItemStack.parseOptional(provider, tempTag2_Copy);
-                            inventory.setItem(i, itemStack);
+                            ItemStack itemStack = null;
+                            if (provider != null) {
+                                itemStack = ItemStack.parseOptional(provider, tempTag2_Copy);
+                            }
+                            if (itemStack != null) {
+                                inventory.setItem(i, itemStack);
+                            }
 
                             IntTag tempIntTag = IntTag.valueOf(tempTag2.getInt("count") - itemStackTemp.getMaxStackSize());
                             tempTag2.remove("count");
@@ -129,8 +151,8 @@ public class PouchOfUnknownNirvana {
                             tempTag.put(nbtString, tempTag2);
                             canTakeOutList.remove(itemName);
                             canTakeOutList.put(itemName, tempTag);
-                            break;
                         }
+                        break;
                     }
                     if (!itemStillHasAmount) {
                         canTakeOutList.remove(itemName);
@@ -144,7 +166,9 @@ public class PouchOfUnknownNirvana {
             }
         }
         pouchContents.put("canTakeOut", canTakeOutList);
-        DataOperater.fileWriter(server, player, pouchContents);
+        if (server != null) {
+            DataOperater.fileWriter(server, player, pouchContents);
+        }
         pouchContents.remove("canTakeOut");
 
         Component takeOutMessage = Component.translatable("pouchofunknownnirvana.text.output", takeOutSum);
